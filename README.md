@@ -36,3 +36,7 @@ copilot-credits/
 ```
 
 Each `.json` file in `data/` contains the full session data for one project, including per-model credit usage and token counts.
+
+## Development
+
+This project was only tested with VS Code on macOS. It may work on other platforms but that is not guaranteed. I'm open to contributions to improve cross-platform compatibility.
