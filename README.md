@@ -7,7 +7,11 @@ Extract and summarize GitHub Copilot credit usage from VS Code chat sessions.
 Run directly with npx — no installation required:
 
 ```bash
+# npm
 npx github-copilot-credits-counter
+
+# pnpm
+pnpm dlx github-copilot-credits-counter@latest
 ```
 
 This automatically detects your VS Code workspace storage and writes output to a `copilot-credits/` folder in the current directory.
