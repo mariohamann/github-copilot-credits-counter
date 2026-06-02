@@ -444,10 +444,10 @@ export function generateHtml(projects, grandTotal) {
   const payload = JSON.stringify({ generatedAt: new Date().toISOString(), grandTotal, projects });
 
   return template
-    .replace('{{STYLES}}', styles)
-    .replace('{{CHART_JS}}', chartJs)
-    .replace('{{DATA}}', payload)
-    .replace('{{SCRIPT}}', script);
+    .replace('{{STYLES}}', () => styles)
+    .replace('{{CHART_JS}}', () => chartJs)
+    .replace('{{DATA}}', () => payload)
+    .replace('{{SCRIPT}}', () => script);
 }
 
 // Run only when executed directly (not when imported by tests)
