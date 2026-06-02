@@ -9,7 +9,12 @@
   function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-  var state = { dateFrom: null, dateTo: null, selectedProjects: new Set(), showDollars: false };
+  var _now = new Date();
+  var _utcMonthStart = Date.UTC(_now.getUTCFullYear(), _now.getUTCMonth(), 1);
+  var _utcMonthEnd = Date.UTC(_now.getUTCFullYear(), _now.getUTCMonth() + 1, 0, 23, 59, 59, 999);
+  var _localMonthStart = new Date(_now.getFullYear(), _now.getMonth(), 1).getTime();
+  var _localMonthEnd = new Date(_now.getFullYear(), _now.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+  var state = { dateFrom: _utcMonthStart, dateTo: _utcMonthEnd, selectedProjects: new Set(), showDollars: false, useUTC: true };
   var charts = {};
 
   function filteredProjects() {
@@ -47,18 +52,20 @@
     document.getElementById('app').innerHTML =
       buildHeader() +
       buildFilters() +
+      '<div class="page-content">' +
       buildKpis(grandTotal, projects.length, requests.length, promptTokens, outputTokens) +
       buildChartSlots() +
       buildTable(projects) +
       buildDrillDown(projects) +
-      '<div class="footer">copilot-credits &bull; data from VS Code workspaceStorage</div>';
+      '<div class="footer">copilot-credits &bull; data from VS Code workspaceStorage</div>' +
+      '</div>';
 
     attachEvents();
     renderCharts(projects, requests);
   }
 
   function buildHeader() {
-    return '<div class="header"><h1>Copilot Credits Report</h1><p class="meta">Generated ' + esc(fmtDate(new Date(DATA.generatedAt).getTime())) + '</p></div>';
+    return '<div class="page-header"><div class="page-inner"><h1>Copilot Credits Report</h1><p class="meta">Generated ' + esc(fmtDate(new Date(DATA.generatedAt).getTime())) + '</p></div></div>';
   }
 
   function buildKpis(grandTotal, projectCount, requestCount, promptTokens, outputTokens) {
@@ -77,14 +84,33 @@
     var opts = DATA.projects.map(function (p) {
       return '<option value="' + esc(p.project) + '"' + (state.selectedProjects.has(p.project) ? ' selected' : '') + '>' + esc(p.projectName) + '</option>';
     }).join('');
-    function toVal(ts) { return ts ? new Date(ts).toISOString().slice(0, 10) : ''; }
-    return '<div class="filters">' +
+    function toVal(ts) {
+      if (!ts) return '';
+      if (state.useUTC) return new Date(ts).toISOString().slice(0, 10);
+      var d = new Date(ts);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    var tzOffset = -_now.getTimezoneOffset();
+    var tzSign = tzOffset >= 0 ? '+' : '-';
+    var tzHours = String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, '0');
+    var tzMins = String(Math.abs(tzOffset) % 60).padStart(2, '0');
+    var localTzLabel = 'Local (UTC' + tzSign + tzHours + ':' + tzMins + ')';
+    return '<div class="filters-outer"><div class="page-inner filters-inner">' +
+      '<div class="filter-col">' +
+      '<div class="filter-row">' +
       '<div class="filter-group"><label for="f-from">From</label><input type="date" id="f-from" value="' + toVal(state.dateFrom) + '" /></div>' +
       '<div class="filter-group"><label for="f-to">To</label><input type="date" id="f-to" value="' + toVal(state.dateTo) + '" /></div>' +
-      '<div class="filter-group"><label for="f-proj">Projects <span style="font-weight:400">(ctrl+click)</span></label><select id="f-proj" multiple>' + opts + '</select></div>' +
+      '</div>' +
+      '<div class="filter-group"><label hidden>Timezone</label><div class="tz-toggle"><button class="tz-btn' + (state.useUTC ? ' active' : '') + '" id="tz-utc">UTC <span class="tz-note">(GitHub billing)</span></button><button class="tz-btn' + (!state.useUTC ? ' active' : '') + '" id="tz-local">' + esc(localTzLabel) + '</button></div></div>' +
+      '</div>' +
+      '<div class="filter-sep"></div>' +
+      '<div class="filter-col filter-col--grow"><div class="filter-group"><label for="f-proj">Projects <span class="filter-hint">(ctrl+click)</span></label><select id="f-proj" multiple>' + opts + '</select></div></div>' +
+      '<div class="filter-sep"></div>' +
+      '<div class="filter-col filter-col--actions">' +
       '<div class="filter-group filter-group--toggle"><label class="toggle-label"><input type="checkbox" id="f-dollars"' + (state.showDollars ? ' checked' : '') + ' /><span>Show in $ <span class="toggle-disclaimer">(1 credit = $0.01)</span></span></label></div>' +
-      '<button class="btn-reset" id="f-reset">Reset filters</button>' +
-      '</div>';
+      '<button class="btn-reset" id="f-reset"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset</button>' +
+      '</div>' +
+      '</div></div>';
   }
 
   function buildChartSlots() {
@@ -128,12 +154,16 @@
     var toEl = document.getElementById('f-to');
     var projEl = document.getElementById('f-proj');
     var resetEl = document.getElementById('f-reset');
-    if (fromEl) fromEl.addEventListener('change', function (e) { state.dateFrom = e.target.value ? new Date(e.target.value).getTime() : null; render(); });
-    if (toEl) toEl.addEventListener('change', function (e) { state.dateTo = e.target.value ? new Date(e.target.value + 'T23:59:59').getTime() : null; render(); });
+    if (fromEl) fromEl.addEventListener('change', function (e) { state.dateFrom = e.target.value ? new Date(e.target.value + (state.useUTC ? 'T00:00:00Z' : 'T00:00:00')).getTime() : null; render(); });
+    if (toEl) toEl.addEventListener('change', function (e) { state.dateTo = e.target.value ? new Date(e.target.value + (state.useUTC ? 'T23:59:59Z' : 'T23:59:59')).getTime() : null; render(); });
     if (projEl) projEl.addEventListener('change', function (e) { state.selectedProjects = new Set(Array.from(e.target.selectedOptions).map(function (o) { return o.value; })); render(); });
     var dollarsEl = document.getElementById('f-dollars');
     if (dollarsEl) dollarsEl.addEventListener('change', function (e) { state.showDollars = e.target.checked; render(); });
-    if (resetEl) resetEl.addEventListener('click', function () { state = { dateFrom: null, dateTo: null, selectedProjects: new Set(), showDollars: state.showDollars }; render(); });
+    var tzUtcEl = document.getElementById('tz-utc');
+    var tzLocalEl = document.getElementById('tz-local');
+    if (tzUtcEl) tzUtcEl.addEventListener('click', function () { if (!state.useUTC) { state.useUTC = true; state.dateFrom = _utcMonthStart; state.dateTo = _utcMonthEnd; render(); } });
+    if (tzLocalEl) tzLocalEl.addEventListener('click', function () { if (state.useUTC) { state.useUTC = false; state.dateFrom = _localMonthStart; state.dateTo = _localMonthEnd; render(); } });
+    if (resetEl) resetEl.addEventListener('click', function () { state = { dateFrom: state.useUTC ? _utcMonthStart : _localMonthStart, dateTo: state.useUTC ? _utcMonthEnd : _localMonthEnd, selectedProjects: new Set(), showDollars: state.showDollars, useUTC: state.useUTC }; render(); });
     document.querySelectorAll('[data-accordion]').forEach(function (h) {
       h.addEventListener('click', function () {
         h.classList.toggle('open');
