@@ -1,10 +1,10 @@
 {
-  "name": "copilot-credits",
+  "name": "github-copilot-credits-counter",
   "version": "1.0.0",
   "description": "Extract GitHub Copilot credit usage from VS Code chat sessions",
   "main": "index.js",
   "bin": {
-    "copilot-credits": "./index.js"
+    "github-copilot-credits-counter": "./index.js"
   },
   "files": [
     "index.js",
