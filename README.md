@@ -1,5 +1,7 @@
 # github-copilot-credits-counter
 
+<img width="3014" height="1668" alt="CleanShot 2026-06-02 at 12 26 26@2x" src="https://github.com/user-attachments/assets/6e9c331d-b348-4a94-9f7d-79721968c1c2" />
+
 Reads your local VS Code chat session files and summarizes GitHub Copilot credit usage per project — no API calls, no authentication required.
 
 ## How it works
