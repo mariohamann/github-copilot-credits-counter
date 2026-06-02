@@ -6,6 +6,13 @@
   "bin": {
     "copilot-credits": "./index.js"
   },
+  "files": [
+    "index.js",
+    "src/report.html",
+    "src/report.css",
+    "src/report.js",
+    "vendor/chart.umd.min.js"
+  ],
   "scripts": {
     "test": "node --test index.test.js",
     "start": "node index.js",

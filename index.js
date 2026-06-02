@@ -4,6 +4,7 @@ import { promises as fsp } from 'node:fs';
 import readline from 'node:readline';
 import path from 'node:path';
 import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 // ---------------------------------------------------------------------------
 // Pure parsing functions (exported for testing)
@@ -338,8 +339,14 @@ async function main() {
     return;
   }
 
-  const outputDir = path.join(process.cwd(), 'output');
-  if (!noWrite) fs.mkdirSync(outputDir, { recursive: true });
+  const outputDir = path.join(process.cwd(), 'copilot-credits');
+  const dataDir = path.join(outputDir, 'data');
+
+  if (!noWrite) {
+    // Clear the output folder before writing fresh results
+    fs.rmSync(outputDir, { recursive: true, force: true });
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
 
   let grandTotal = 0;
 
@@ -349,14 +356,98 @@ async function main() {
     if (!noWrite) {
       // Use the workspace hash from the first session for the filename
       const workspaceHash = project.sessions[0]?.workspaceHash ?? project.projectName.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const outFile = path.join(outputDir, `${workspaceHash}.json`);
+      const outFile = path.join(dataDir, `${workspaceHash}.json`);
       fs.writeFileSync(outFile, JSON.stringify(project, null, 2), 'utf8');
       console.log(`    → ${outFile}`);
     }
   }
 
   console.log(`\nTotal across all projects: ${grandTotal} credits`);
-  if (!noWrite) console.log(`Output written to: ${outputDir}`);
+
+  if (!noWrite) {
+    // summary.md
+    const mdPath = path.join(outputDir, 'summary.md');
+    fs.writeFileSync(mdPath, generateMarkdown(projects, grandTotal), 'utf8');
+    console.log(`Summary (Markdown): ${mdPath}`);
+
+    // summary.html
+    const htmlPath = path.join(outputDir, 'summary.html');
+    const html = generateHtml(projects, grandTotal);
+    fs.writeFileSync(htmlPath, html, 'utf8');
+    console.log(`Summary (HTML):     ${htmlPath}`);
+
+    console.log(`\nOutput folder: ${outputDir}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Summary generators
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a Markdown summary report.
+ * @param {ReturnType<typeof aggregateProjects>} projects
+ * @param {number} grandTotal
+ * @returns {string}
+ */
+export function generateMarkdown(projects, grandTotal) {
+  const now = new Date().toISOString();
+  const lines = [
+    '# Copilot Credits Report',
+    '',
+    `> Generated: ${now}`,
+    '',
+    `**Grand Total: ${grandTotal} credits** across ${projects.length} project${projects.length !== 1 ? 's' : ''}`,
+    '',
+    '## Projects',
+    '',
+    '| Project | Credits | Sessions | Top Model |',
+    '|---------|--------:|--------:|-----------|',
+  ];
+
+  for (const p of projects) {
+    const modelCounts = new Map();
+    for (const s of p.sessions) {
+      for (const r of s.requests) {
+        if (r.model) modelCounts.set(r.model, (modelCounts.get(r.model) ?? 0) + 1);
+      }
+    }
+    const topModel = [...modelCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+    lines.push(`| ${p.projectName} | ${p.totalCredits} | ${p.sessions.length} | ${topModel} |`);
+  }
+
+  lines.push('');
+  return lines.join('\n');
+}
+
+/**
+ * Generate a single-file HTML report by injecting aggregated data into the
+ * pre-built Vite template.
+ * @param {ReturnType<typeof aggregateProjects>} projects
+ * @param {number} grandTotal
+ * @returns {string} HTML string
+ */
+export function generateHtml(projects, grandTotal) {
+  const srcDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'src');
+  const vendorDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'vendor');
+
+  const template = fs.readFileSync(path.join(srcDir, 'report.html'), 'utf8');
+  const styles = fs.readFileSync(path.join(srcDir, 'report.css'), 'utf8');
+  const script = fs.readFileSync(path.join(srcDir, 'report.js'), 'utf8');
+  let chartJs = '';
+  try {
+    chartJs = fs.readFileSync(path.join(vendorDir, 'chart.umd.min.js'), 'utf8');
+  } catch {
+    console.warn('Chart.js vendor file not found. Run: curl -fsSL https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js -o vendor/chart.umd.min.js');
+  }
+
+  const payload = JSON.stringify({ generatedAt: new Date().toISOString(), grandTotal, projects });
+
+  return template
+    .replace('{{STYLES}}', styles)
+    .replace('{{CHART_JS}}', chartJs)
+    .replace('{{DATA}}', payload)
+    .replace('{{SCRIPT}}', script);
 }
 
 // Run only when executed directly (not when imported by tests)
@@ -364,3 +455,4 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve
 if (isMain) {
   main();
 }
+
