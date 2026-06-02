@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { promises as fsp } from 'node:fs';
+import readline from 'node:readline';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -217,54 +219,74 @@ function projectName(folderUri) {
 // File system scanning
 // ---------------------------------------------------------------------------
 
-function readJsonSafe(filePath) {
+async function readJsonSafe(filePath) {
   try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const text = await fsp.readFile(filePath, 'utf8');
+    return JSON.parse(text);
   } catch {
     return null;
   }
 }
 
-function scanWorkspaceStorage(storageDir) {
-  const sessions = [];
+/**
+ * Parse a JSONL file line-by-line using a stream (avoids loading the whole file into memory).
+ * @param {string} filePath
+ * @returns {Promise<string[]>}
+ */
+function readLinesStream(filePath) {
+  return new Promise((resolve, reject) => {
+    const lines = [];
+    const fileStream = fs.createReadStream(filePath, { encoding: 'utf8' });
+    fileStream.on('error', reject);
+    const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
+    rl.on('line', (line) => { if (line) lines.push(line); });
+    rl.on('close', () => resolve(lines));
+    rl.on('error', reject);
+  });
+}
 
+async function scanWorkspaceStorage(storageDir) {
   let entries;
   try {
-    entries = fs.readdirSync(storageDir, { withFileTypes: true });
+    entries = await fsp.readdir(storageDir, { withFileTypes: true });
   } catch (err) {
     console.error(`Cannot read storage directory: ${storageDir}\n${err.message}`);
     process.exit(1);
   }
 
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const workspaceDir = path.join(storageDir, entry.name);
+  const workspaceDirs = entries.filter((e) => e.isDirectory());
 
-    // Read workspace.json to identify the project
-    const workspaceJson = readJsonSafe(path.join(workspaceDir, 'workspace.json'));
-    if (!workspaceJson?.folder) continue;
+  // Process all workspace directories in parallel
+  const results = await Promise.all(workspaceDirs.map(async (entry) => {
+    const workspaceDir = path.join(storageDir, entry.name);
+    const sessions = [];
+
+    const workspaceJson = await readJsonSafe(path.join(workspaceDir, 'workspace.json'));
+    if (!workspaceJson?.folder) return sessions;
 
     const project = workspaceJson.folder;
     const chatSessionsDir = path.join(workspaceDir, 'chatSessions');
 
     let sessionFiles;
     try {
-      sessionFiles = fs.readdirSync(chatSessionsDir).filter((f) => f.endsWith('.jsonl'));
+      const files = await fsp.readdir(chatSessionsDir);
+      sessionFiles = files.filter((f) => f.endsWith('.jsonl'));
     } catch {
-      continue; // no chatSessions dir — skip
+      return sessions; // no chatSessions dir — skip
     }
 
-    for (const sessionFile of sessionFiles) {
+    // Process all session files in this workspace in parallel
+    await Promise.all(sessionFiles.map(async (sessionFile) => {
       const filePath = path.join(chatSessionsDir, sessionFile);
       let lines;
       try {
-        lines = fs.readFileSync(filePath, 'utf8').split('\n').filter(Boolean);
+        lines = await readLinesStream(filePath);
       } catch {
-        continue;
+        return;
       }
 
       const requests = parseSession(lines);
-      if (requests.length === 0) continue; // no credit data — skip
+      if (requests.length === 0) return; // no credit data — skip
 
       const sessionId = requests[0]?.sessionId ?? path.basename(sessionFile, '.jsonl');
 
@@ -275,10 +297,12 @@ function scanWorkspaceStorage(storageDir) {
         sessionId,
         requests,
       });
-    }
-  }
+    }));
 
-  return sessions;
+    return sessions;
+  }));
+
+  return results.flat();
 }
 
 // ---------------------------------------------------------------------------
@@ -306,7 +330,7 @@ async function main() {
 
   console.log(`Scanning: ${storageDir}`);
 
-  const sessions = scanWorkspaceStorage(storageDir);
+  const sessions = await scanWorkspaceStorage(storageDir);
   const projects = aggregateProjects(sessions);
 
   if (projects.length === 0) {
