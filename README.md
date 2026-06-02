@@ -1,6 +1,17 @@
 # github-copilot-credits-counter
 
-Extract and summarize GitHub Copilot credit usage from VS Code chat sessions.
+Reads your local VS Code chat session files and summarizes GitHub Copilot credit usage per project — no API calls, no authentication required.
+
+## How it works
+
+VS Code stores Copilot chat sessions locally on disk. This tool scans those files, extracts the credit cost and model for each completed request, and aggregates the results per project.
+
+### Limitations
+
+- Only sessions stored locally by VS Code are counted. Cleared or missing sessions won't appear.
+- Only completed requests have credit data — cancelled or failed ones are skipped.
+- The internal session format may change with VS Code updates, which could break parsing.
+- Token counts are not always available, depending on the model and Copilot version.
 
 ## Usage
 
@@ -8,7 +19,7 @@ Run directly with npx — no installation required:
 
 ```bash
 # npm
-npx github-copilot-credits-counter
+npx github-copilot-credits-counter@latest
 
 # pnpm
 pnpm dlx github-copilot-credits-counter@latest
