@@ -1,6 +1,6 @@
 {
   "name": "github-copilot-credits-counter",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Extract GitHub Copilot credit usage from VS Code chat sessions",
   "main": "index.js",
   "bin": {
@@ -21,12 +21,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.5.0",
-      "onFail": "download"
-    }
-  },
   "type": "module"
 }
