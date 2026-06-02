@@ -1,0 +1,6 @@
+{"kind":0,"v":{"version":3,"creationDate":1780320000000,"initialLocation":"panel","responderUsername":"GitHub Copilot","sessionId":"session-ccc-0001","hasPendingEdits":false,"requests":[],"pendingRequests":[],"inputState":{"attachments":[],"mode":{"id":"agent","kind":"agent"},"inputText":"","selections":[]}}}
+{"kind":1,"k":["inputState","inputText"],"v":"Explain this regex pattern"}
+{"kind":2,"k":["requests"],"v":[{"requestId":"req-ccc-0001","timestamp":1780320005000,"modelId":"copilot/claude-sonnet-4.6","responseId":"resp-ccc-0001","modelState":{"value":0},"modeInfo":{"kind":"agent"}}]}
+{"kind":1,"k":["requests",0,"result"],"v":{"timings":{"firstProgress":800,"totalElapsed":2200},"metadata":{"codeBlocks":[],"promptTokens":1500,"outputTokens":90,"resolvedModel":"claude-sonnet-4-6","modelMessageId":"msg-ccc-0001","responseId":"resp-ccc-0001","sessionId":"session-ccc-0001","agentId":"github.copilot.editsAgent"},"details":"Claude Sonnet 4.6 • 5.0 credits"}}
+{"kind":1,"k":["requests",0,"modelState"],"v":{"value":1,"completedAt":1780320007200}}
+{"kind":1,"k":["customTitle"],"v":"Explain regex pattern"}

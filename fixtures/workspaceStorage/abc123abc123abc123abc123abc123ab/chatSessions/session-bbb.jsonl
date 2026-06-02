@@ -1,0 +1,8 @@
+{"kind":0,"v":{"version":3,"creationDate":1780310000000,"initialLocation":"panel","responderUsername":"GitHub Copilot","sessionId":"session-bbb-0001","hasPendingEdits":false,"requests":[],"pendingRequests":[],"inputState":{"attachments":[],"mode":{"id":"agent","kind":"agent"},"inputText":"","selections":[]}}}
+{"kind":1,"k":["inputState","inputText"],"v":"Refactor the entire auth module"}
+{"kind":2,"k":["requests"],"v":[{"requestId":"req-bbb-0001","timestamp":1780310005000,"modelId":"copilot/claude-sonnet-4.6","responseId":"resp-dedup-A","modelState":{"value":0},"modeInfo":{"kind":"agent"}}]}
+{"kind":1,"k":["requests",0,"result"],"v":{"timings":{"firstProgress":2000,"totalElapsed":9800},"metadata":{"codeBlocks":[],"promptTokens":52000,"outputTokens":1800,"resolvedModel":"claude-sonnet-4-6","modelMessageId":"msg-bbb-0001","responseId":"resp-dedup-A","sessionId":"session-bbb-0001","agentId":"github.copilot.editsAgent"},"details":"Claude Sonnet 4.6 • 30.0 credits"}}
+{"kind":1,"k":["requests",0,"modelState"],"v":{"value":1,"completedAt":1780310014800}}
+{"kind":1,"k":["requests",0,"followups"],"v":[]}
+{"kind":1,"k":["customTitle"],"v":"Refactor auth module"}
+{"kind":2,"k":["requests"],"v":[{"requestId":"req-bbb-0001","timestamp":1780310005000,"modelId":"copilot/claude-sonnet-4.6","responseId":"resp-dedup-A","modelState":{"value":1},"result":{"details":"Claude Sonnet 4.6 • 28.5 credits","resolvedModel":"claude-sonnet-4-6","sessionId":"session-bbb-0001","metadata":{"promptTokens":52000,"outputTokens":1800}}}]}

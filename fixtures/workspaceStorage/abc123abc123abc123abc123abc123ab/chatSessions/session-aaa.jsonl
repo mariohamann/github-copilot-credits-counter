@@ -1,0 +1,11 @@
+{"kind":0,"v":{"version":3,"creationDate":1780300000000,"initialLocation":"panel","responderUsername":"GitHub Copilot","sessionId":"session-aaa-0001","hasPendingEdits":false,"requests":[],"pendingRequests":[],"inputState":{"attachments":[],"mode":{"id":"agent","kind":"agent"},"inputText":"","selections":[]}}}
+{"kind":1,"k":["inputState","inputText"],"v":"Fix the bug in utils.js"}
+{"kind":1,"k":["inputState","selections"],"v":[{"startLineNumber":1,"startColumn":1,"endLineNumber":1,"endColumn":22}]}
+{"kind":2,"k":["requests"],"v":[{"requestId":"req-aaa-0001","timestamp":1780300010000,"modelId":"copilot/claude-sonnet-4.6","responseId":"resp-aaa-0001","modelState":{"value":0},"modeInfo":{"kind":"agent"}}]}
+{"kind":1,"k":["requests",0,"result"],"v":{"timings":{"firstProgress":1200,"totalElapsed":4500},"metadata":{"codeBlocks":[],"promptTokens":8000,"outputTokens":320,"resolvedModel":"claude-sonnet-4-6","modelMessageId":"msg-aaa-0001","responseId":"resp-aaa-0001","sessionId":"session-aaa-0001","agentId":"github.copilot.editsAgent"},"details":"Claude Sonnet 4.6 • 12.5 credits"}}
+{"kind":1,"k":["requests",0,"modelState"],"v":{"value":1,"completedAt":1780300014500}}
+{"kind":1,"k":["requests",0,"followups"],"v":[]}
+{"kind":1,"k":["customTitle"],"v":"Fix bug in utils.js"}
+{"kind":1,"k":["inputState","inputText"],"v":"Now add a test for it"}
+{"kind":2,"k":["requests"],"v":[{"requestId":"req-aaa-0001","timestamp":1780300010000,"modelId":"copilot/claude-sonnet-4.6","responseId":"resp-aaa-0001","modelState":{"value":1},"result":{"details":"Claude Sonnet 4.6 • 12.5 credits","resolvedModel":"claude-sonnet-4-6","sessionId":"session-aaa-0001","metadata":{"promptTokens":8000,"outputTokens":320}}},{"requestId":"req-aaa-0002","timestamp":1780300020000,"modelId":"copilot/claude-sonnet-4.6","responseId":"resp-aaa-0002","modelState":{"value":1},"result":{"details":"Claude Sonnet 4.6 • 8.3 credits","resolvedModel":"claude-sonnet-4-6","sessionId":"session-aaa-0001","metadata":{"promptTokens":4200,"outputTokens":180}}}]}
+{"kind":1,"k":["inputState","inputText"],"v":""}

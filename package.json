@@ -1,0 +1,25 @@
+{
+  "name": "copilot-credits",
+  "version": "1.0.0",
+  "description": "Extract GitHub Copilot credit usage from VS Code chat sessions",
+  "main": "index.js",
+  "bin": {
+    "copilot-credits": "./index.js"
+  },
+  "scripts": {
+    "test": "node --test index.test.js",
+    "start": "node index.js",
+    "dev": "node index.js --path ./fixtures/workspaceStorage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.5.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module"
+}
