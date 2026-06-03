@@ -9,7 +9,7 @@
     "url": "git+https://github.com/mariohamann/github-copilot-credits-counter.git"
   },
   "bin": {
-    "github-copilot-credits-counter": "./index.js"
+    "github-copilot-credits-counter": "index.js"
   },
   "files": [
     "index.js",
