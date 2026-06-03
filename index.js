@@ -312,6 +312,30 @@ async function scanWorkspaceStorage(storageDir) {
 
 function parseArgs(argv) {
   const args = argv.slice(2);
+  
+  // Handle help flag
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`
+github-copilot-credits-counter
+
+Extract GitHub Copilot credit usage from VS Code chat sessions.
+
+USAGE:
+  github-copilot-credits-counter [OPTIONS] [PATH]
+
+OPTIONS:
+  --path, -p <path>    Custom path to VS Code workspaceStorage directory
+  --no-write           Don't write output files (dry-run)
+  --help, -h           Show this help message
+
+EXAMPLES:
+  github-copilot-credits-counter
+  github-copilot-credits-counter --path ~/my-custom-storage
+  github-copilot-credits-counter --no-write
+    `);
+    process.exit(0);
+  }
+  
   const pathIdx = args.findIndex((a) => a === '--path' || a === '-p');
   const customPath = pathIdx !== -1 && args[pathIdx + 1] ? args[pathIdx + 1] : null;
   const noWrite = args.includes('--no-write');
@@ -451,8 +475,15 @@ export function generateHtml(projects, grandTotal) {
 }
 
 // Run only when executed directly (not when imported by tests)
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.url.replace('file://', ''));
+const __filename = fileURLToPath(import.meta.url);
+const isMain = import.meta.url === `file://${__filename}` || 
+               process.argv[1]?.endsWith('index.js') ||
+               process.argv[1]?.includes('bin/github-copilot-credits-counter');
+
 if (isMain) {
-  main();
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 }
 
